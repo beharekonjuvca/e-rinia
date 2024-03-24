@@ -1,8 +1,10 @@
 const express = require("express");
 require("dotenv").config();
 const { Sequelize } = require("sequelize");
-const userRoutes = require("./routes/userRoutes"); // Adjust the path as necessary
-
+const volunteerRoutes = require("./routes/volunteerRoutes"); // Adjust the path as necessary
+const organizationRoutes = require("./routes/organizationRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const eventRoutes = require("./routes/eventRoutes");
 const app = express();
 
 // // Set up a connection using Sequelize
@@ -29,7 +31,7 @@ const app = express();
 
 // testDatabaseConnection();
 const sequelize = require("./config/db"); // Adjust the path as necessary
-const User = require("./models/UserModel"); // Adjust the path as necessary
+const User = require("./models/volunteerModel"); // Adjust the path as necessary
 
 // Sync all models that are not already in the database
 sequelize
@@ -51,8 +53,13 @@ app.get("/", (req, res) => {
 
 app.use(express.json()); // Middleware to parse JSON bodies
 
-// Use user routes
-app.use("/api/users", userRoutes);
-
+// Use volunteer routes
+app.use("/api/volunteer", volunteerRoutes);
+// Use organization routes
+app.use("/api/organization", organizationRoutes);
+// Use admin routes
+app.use("/api/admin", adminRoutes);
+// Use event routes
+app.use("/api/event", eventRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
