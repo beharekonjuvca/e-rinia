@@ -13,22 +13,40 @@ import AddEventModal from "./AddEventModal"; // Ensure the path is correct
 
 const EventTable = () => {
   const [events, setEvents] = useState([]);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+  const [loading, setLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const data = await getAllEvents();
-        setEvents(data);
-      } catch (error) {
-        console.error("Error fetching events:", error);
-      }
-    };
+  const fetchEvents = async (page, pageSize) => {
+    setLoading(true);
+    try {
+      const data = await getAllEvents(page, pageSize);
+      setEvents(data.data);
+      setPagination({
+        current: data.pagination.currentPage,
+        pageSize: data.pagination.pageSize,
+        total: data.pagination.totalItems,
+      });
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchEvents();
+  useEffect(() => {
+    fetchEvents(pagination.current, pagination.pageSize);
   }, []);
+
+  const handleTableChange = (pagination) => {
+    fetchEvents(pagination.current, pagination.pageSize);
+  };
 
   const handleDelete = async (id) => {
     try {
@@ -162,7 +180,18 @@ const EventTable = () => {
           Add Event
         </Button>
       </div>
-      <Table dataSource={events} columns={columns} rowKey="id" />
+      <Table
+        dataSource={events}
+        columns={columns}
+        rowKey="id"
+        pagination={{
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+          total: pagination.total,
+        }}
+        loading={loading}
+        onChange={handleTableChange}
+      />
       {selectedEvent && (
         <EditEventModal
           visible={isEditModalVisible}

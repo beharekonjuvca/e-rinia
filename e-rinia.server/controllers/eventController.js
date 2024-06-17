@@ -45,9 +45,28 @@ exports.createEvent = async (req, res) => {
 };
 
 exports.getAllEvents = async (req, res) => {
+  const { page = 1, pageSize = 10 } = req.query; // Default to page 1 and 10 events per page
+
+  const offset = (page - 1) * pageSize;
+  const limit = parseInt(pageSize, 10);
+
   try {
-    const events = await Event.findAll();
-    res.json(events);
+    const { count, rows } = await Event.findAndCountAll({
+      offset,
+      limit,
+    });
+
+    const totalPages = Math.ceil(count / pageSize);
+
+    res.json({
+      data: rows,
+      pagination: {
+        totalItems: count,
+        totalPages,
+        currentPage: parseInt(page, 10),
+        pageSize: limit,
+      },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");
@@ -151,6 +170,41 @@ exports.getEventsByOrganizationPublic = async (req, res) => {
     });
 
     res.json(events);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
+  }
+};
+exports.getEventsByInstitution = async (req, res) => {
+  const { page = 1, pageSize = 10 } = req.query;
+
+  const offset = (page - 1) * pageSize;
+  const limit = parseInt(pageSize, 10);
+
+  try {
+    const { count, rows } = await Event.findAndCountAll({
+      include: [
+        {
+          model: Organization,
+          as: "organization",
+          where: { type: "Institution" },
+        },
+      ],
+      offset,
+      limit,
+    });
+
+    const totalPages = Math.ceil(count / pageSize);
+
+    res.json({
+      data: rows,
+      pagination: {
+        totalItems: count,
+        totalPages,
+        currentPage: parseInt(page, 10),
+        pageSize: limit,
+      },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).send("Server error");

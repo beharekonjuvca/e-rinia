@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Modal, Form, Input, DatePicker, message } from "antd";
+import moment from "moment"; // Import moment
 
 const EditEventModal = ({ visible, onClose, event, onSave }) => {
   const [form] = Form.useForm();
@@ -28,7 +29,7 @@ const EditEventModal = ({ visible, onClose, event, onSave }) => {
         initialValues={{
           name: event.name,
           place: event.place,
-          date: event.date,
+          date: moment(event.date), // Use moment to handle the date
           description: event.description,
         }}
       >
@@ -51,7 +52,7 @@ const EditEventModal = ({ visible, onClose, event, onSave }) => {
           label="Date"
           rules={[{ required: true, message: "Please select the event date!" }]}
         >
-          <DatePicker showTime />
+          <DatePicker showTime format="YYYY-MM-DD HH:mm:ss" />
         </Form.Item>
         <Form.Item name="description" label="Description">
           <Input.TextArea />

@@ -457,9 +457,14 @@ export const approveEvent = async (id) => {
 };
 
 // Get All Events
-export const getAllEvents = async () => {
+export const getAllEvents = async (page = 1, pageSize = 10) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}events`);
+    const response = await axios.get(`${API_BASE_URL}events`, {
+      params: {
+        page,
+        pageSize,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching events:", error);

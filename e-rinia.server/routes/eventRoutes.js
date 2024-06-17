@@ -68,7 +68,7 @@ router.get(
   "/organization/:orgId",
   eventController.getEventsByOrganizationPublic
 );
-
+router.get("/institution", eventController.getEventsByInstitution);
 router.post(
   "/upload/:id",
   upload.single("picture"),
