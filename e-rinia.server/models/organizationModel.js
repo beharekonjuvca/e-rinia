@@ -1,56 +1,47 @@
-const { Model, DataTypes } = require("sequelize");
-const sequelize = require("../config/db"); // Adjust this to the path of your Sequelize connection
+const { DataTypes } = require("sequelize");
 
-class Organization extends Model {
-  // Define any instance methods here, for example:
-  addEvent(event) {
-    // Logic to add an event to this organization
-  }
+module.exports = (sequelize) => {
+  class Organization extends sequelize.Sequelize.Model {}
 
-  removeEvent(event) {
-    // Logic to remove an event from this organization
-  }
+  Organization.init(
+    {
+      // Define model attributes according to your schema
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      joinCode: {
+        type: DataTypes.STRING,
+        // allowNull defaults to true
+      },
+      picture: {
+        type: DataTypes.STRING, // Changed from BLOB to STRING
+        allowNull: true,
+      },
+      description: {
+        type: DataTypes.STRING,
+        // Or DataTypes.TEXT if you need more space
+      },
+      // Add a type attribute to your Organization model
+      type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
 
-  editEvent(event) {
-    // Logic to edit an event associated with this organization
-  }
-}
-
-Organization.init(
-  {
-    // Define model attributes according to the UML diagram
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      // Add any other attributes as necessary
     },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
-    joinCode: {
-      type: DataTypes.STRING,
-      // allowNull is not specified in the UML, you may choose based on your business rules
-    },
-    picture: {
-      type: DataTypes.BLOB,
-      // This assumes you are storing images as BLOBs, if not adjust accordingly
-    },
-    description: {
-      type: DataTypes.STRING,
-      // allowNull is not specified in the UML, you may choose based on your business rules
-    },
-    // You can include the association to events here if you prefer
-    // However, associations are typically defined after all models are initialized
-  },
-  {
-    sequelize,
-    modelName: "Organization",
-    // Additional model options go here
-  }
-);
+    {
+      sequelize,
+      modelName: "Organization",
+      tableName: "organizations",
+      // Other model options
+    }
+  );
 
-// Associations can also be defined here if necessary, for example:
-// Organization.hasMany(Event, { foreignKey: 'organizationId', as: 'events' });
-
-module.exports = Organization;
+  return Organization;
+};

@@ -1,10 +1,29 @@
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Volunteer = require("../models/volunteerModel"); // Adjust the path as necessary
+const { Volunteer, Organization, FavoriteOrganizations } = require("../models"); // Adjust the path as necessary
 
-// Assuming your .env file has JWT_SECRET defined
 const jwtSecret = process.env.JWT_SECRET;
+// const multer = require("multer");
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, "../uploads/");
+//   },
+//   filename: function (req, file, cb) {
+//     cb(
+//       null,
+//       file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+//     );
+//   },
+// });
+
+// const upload = multer({ storage: storage });
+// const fs = require("fs");
+// const dir = "../uploads";
+
+// if (!fs.existsSync(dir)) {
+//   fs.mkdirSync(dir, { recursive: true });
+// }
 
 exports.login = async (req, res) => {
   try {
@@ -22,7 +41,7 @@ exports.login = async (req, res) => {
 
     const payload = {
       volunteer: {
-        id: volunteer.id, // Use the volunteer's ID to create the payload
+        id: volunteer.id,
         role: "volunteer",
       },
     };
@@ -37,10 +56,11 @@ exports.login = async (req, res) => {
   }
 };
 
-// Authentication middleware
-// Assuming jwtSecret is defined at the top of the file
-// const jwtSecret = process.env.JWT_SECRET;
+// Other controller methods remain largely unchanged
+// ...
 
+// Authentication middleware are unchanged
+// ...
 exports.authorizeRole = (expectedRole) => (req, res, next) => {
   const token = req.header("Authorization");
 
@@ -133,13 +153,16 @@ exports.getAllVolunteers = async (req, res) => {
 
 // Authentication middleware
 exports.authMiddleware = (req, res, next) => {
-  const token = req.header("Authorization");
+  //const token = req.header("Authorization");
+  const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
     return res.status(401).json({ msg: "No token, authorization denied" });
   }
   try {
     const decoded = jwt.verify(token, jwtSecret);
+    console.log("Decoded volunteer ID:", decoded.volunteer.id);
     req.volunteer = decoded.volunteer;
+    console.log("Volunteer in middleware:", req.volunteer);
     next();
   } catch (err) {
     return res.status(401).json({ msg: "Token is not valid" });
@@ -194,3 +217,110 @@ exports.deleteVolunteer = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+exports.favoriteOrganization = async (req, res) => {
+  try {
+    const { organizationId } = req.body;
+    const volunteerId = req.volunteer.id;
+
+    // Check if the like already exists
+    const existingFavorite = await FavoriteOrganizations.findOne({
+      where: {
+        volunteerId: volunteerId,
+        organizationId: organizationId,
+      },
+    });
+
+    if (existingFavorite) {
+      // The volunteer has already liked this organization
+      return res.status(409).send("You have already liked this organization.");
+    }
+
+    // Proceed to create the like since it doesn't exist
+    const favorite = await FavoriteOrganizations.create({
+      volunteerId,
+      organizationId,
+    });
+
+    res.status(201).json(favorite);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
+  }
+};
+
+exports.unfavoriteOrganization = async (req, res) => {
+  try {
+    const { organizationId } = req.body;
+    const volunteerId = req.volunteer.id;
+
+    // Check if the like exists
+    const existingFavorite = await FavoriteOrganizations.findOne({
+      where: {
+        volunteerId: volunteerId,
+        organizationId: organizationId,
+      },
+    });
+
+    if (!existingFavorite) {
+      // The volunteer has not liked this organization yet
+      return res.status(404).send("Like not found.");
+    }
+
+    // Proceed to remove the like
+    await existingFavorite.destroy();
+
+    res.status(200).send("Organization has been unfavorited successfully.");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
+  }
+};
+
+exports.getLikedOrganizations = async (req, res) => {
+  //const volunteerId = req.volunteer.id; // Confirmed as '6' from your log
+  const volunteerId = req.volunteer.id;
+  console.log("Fetching organizations for volunteer ID:", volunteerId);
+  try {
+    const favoriteOrganizations = await FavoriteOrganizations.findAll({
+      where: { volunteerId: volunteerId },
+      include: [
+        {
+          model: Organization,
+          required: true,
+        },
+      ],
+    });
+
+    // If you're aiming to return only the organizations, map over the results
+    const organizations = favoriteOrganizations.map((fav) => fav.Organization);
+
+    res.json(organizations);
+  } catch (error) {
+    console.error("Error fetching favorite organizations:", error);
+    res.status(500).send("Server error");
+  }
+};
+// In your volunteer controller
+
+// Route to upload a profile picture
+exports.uploadProfilePicture = async (req, res) => {
+  try {
+    const volunteer = await Volunteer.findByPk(req.params.id);
+    if (!volunteer) {
+      return res.status(404).send("Volunteer not found");
+    }
+
+    const file = req.file;
+    const imageUrl = `/uploads/${file.filename}`;
+
+    volunteer.profilePicture = imageUrl;
+    await volunteer.save();
+
+    res.send({ message: "Profile picture uploaded successfully", imageUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+};
+
+// In your routes file

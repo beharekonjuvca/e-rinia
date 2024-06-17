@@ -1,16 +1,42 @@
-const Event = require("../models/eventModel"); // Adjust the path as necessary
+const { Event } = require("../models"); // Adjust the path as necessary
 
+// exports.createEvent = async (req, res) => {
+//   try {
+//     // Assuming req.organization contains the authenticated organization's information
+//     const organizationId = req.organization.id; // Adjust based on your token payload structure
+
+//     const { name, picture, place, date, description } = req.body;
+
+//     const event = await Event.create({
+//       name,
+//       picture, // Handling of image uploads is assumed to be elsewhere
+//       place,
+//       date,
+//       description,
+//       approved: false, // Events start as not approved
+//       organizationId, // Assign the organization ID from the authenticated user
+//     });
+
+//     res.status(201).json(event);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("Server error");
+//   }
+// };
 exports.createEvent = async (req, res) => {
   try {
-    const { name, picture, place, date, description, approved } = req.body;
+    const organizationId = req.organization.id;
+    const { name, place, date, description } = req.body;
+
     const event = await Event.create({
       name,
-      picture, // This will depend on how you're handling image uploads
       place,
       date,
       description,
-      approved,
+      approved: false,
+      organizationId,
     });
+
     res.status(201).json(event);
   } catch (error) {
     console.error(error);
@@ -42,24 +68,24 @@ exports.getEvent = async (req, res) => {
   }
 };
 
+// Event Update
 exports.updateEvent = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, picture, place, date, description } = req.body; // Exclude 'approved' from the destructuring
+    const { id } = req.params; // The event ID
+    const organizationId = req.organization.id; // Assuming this is set from the authMiddleware
 
-    const event = await Event.findByPk(id);
+    // Find the event, and ensure it belongs to the requesting organization
+    const event = await Event.findOne({ where: { id, organizationId } });
     if (!event) {
-      return res.status(404).send("Event not found");
+      return res
+        .status(404)
+        .send(
+          "Event not found or you do not have permission to update this event."
+        );
     }
 
-    await event.update({
-      name,
-      picture, // Be cautious with image data, you might need to handle uploads
-      place,
-      date,
-      description,
-      // Notice 'approved' is not included here
-    });
+    const { name, picture, place, date, description } = req.body;
+    await event.update({ name, picture, place, date, description });
 
     res.json(event);
   } catch (error) {
@@ -68,12 +94,20 @@ exports.updateEvent = async (req, res) => {
   }
 };
 
+// Event Deletion
 exports.deleteEvent = async (req, res) => {
   try {
     const { id } = req.params;
-    const event = await Event.findByPk(id);
+    const organizationId = req.organization.id; // Assuming this is set from the authMiddleware
+
+    // Find the event, and ensure it belongs to the requesting organization
+    const event = await Event.findOne({ where: { id, organizationId } });
     if (!event) {
-      return res.status(404).send("Event not found");
+      return res
+        .status(404)
+        .send(
+          "Event not found or you do not have permission to delete this event."
+        );
     }
 
     await event.destroy();
@@ -83,6 +117,7 @@ exports.deleteEvent = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+
 exports.approveEvent = async (req, res) => {
   try {
     const { id } = req.params; // Assuming the event's ID is passed in the URL
@@ -103,3 +138,42 @@ exports.approveEvent = async (req, res) => {
     return res.status(500).send("Server error");
   }
 };
+// In your eventController.js
+
+exports.getEventsByOrganizationPublic = async (req, res) => {
+  try {
+    // The organization's ID is retrieved from the URL parameters
+    const { orgId } = req.params;
+
+    const events = await Event.findAll({
+      where: { organizationId: orgId },
+      // Optionally, include other related models or specify attributes if needed
+    });
+
+    res.json(events);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
+  }
+};
+exports.uploadEventPicture = async (req, res) => {
+  try {
+    const event = await Event.findByPk(req.params.id);
+    if (!event) {
+      return res.status(404).send(" not found");
+    }
+
+    const file = req.file;
+    const imageUrl = `/uploads/events/${file.filename}`;
+
+    event.picture = imageUrl;
+    await event.save();
+
+    res.send({ message: "Event picture uploaded successfully", imageUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+};
+
+// In your routes file

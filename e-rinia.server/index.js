@@ -1,37 +1,24 @@
 const express = require("express");
+const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 const { Sequelize } = require("sequelize");
 const volunteerRoutes = require("./routes/volunteerRoutes"); // Adjust the path as necessary
 const organizationRoutes = require("./routes/organizationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const eventRoutes = require("./routes/eventRoutes");
+const memberRoutes = require("./routes/memberRoutes"); // Adjust the path as necessary
+
 const app = express();
 
-// // Set up a connection using Sequelize
-// const sequelize = new Sequelize(
-//   process.env.DB_NAME,
-//   process.env.DB_USER,
-//   process.env.DB_PASS,
-//   {
-//     host: process.env.DB_HOST,
-//     dialect: "mysql", // This could be any of the supported databases
-//     logging: false, // Disable logging; default is console.log
-//   }
-// );
-
-// // Test the connection
-// async function testDatabaseConnection() {
-//   try {
-//     await sequelize.authenticate();
-//     console.log("Connection has been established successfully.");
-//   } catch (error) {
-//     console.error("Unable to connect to the database:", error);
-//   }
-// }
-
-// testDatabaseConnection();
 const sequelize = require("./config/db"); // Adjust the path as necessary
 const User = require("./models/volunteerModel"); // Adjust the path as necessary
+const corsOptions = {
+  origin: "http://localhost:5173", // Adjust this to match your frontend's origin
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 
 // Sync all models that are not already in the database
 sequelize
@@ -60,6 +47,11 @@ app.use("/api/organization", organizationRoutes);
 // Use admin routes
 app.use("/api/admin", adminRoutes);
 // Use event routes
-app.use("/api/event", eventRoutes);
+app.use("/api/events", eventRoutes);
+
+app.use("/api/member", memberRoutes);
+//app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

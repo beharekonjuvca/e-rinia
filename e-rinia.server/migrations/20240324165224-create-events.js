@@ -1,8 +1,7 @@
-"use strict";
-
+// migrations/[timestamp]-create-events.js
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("Events", {
+    await queryInterface.createTable("events", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -21,7 +20,7 @@ module.exports = {
         allowNull: false,
       },
       date: {
-        type: Sequelize.DATE,
+        type: Sequelize.DATEONLY, // If you only need the date without time, otherwise use Sequelize.DATE
         allowNull: false,
       },
       description: {
@@ -33,7 +32,10 @@ module.exports = {
         allowNull: false,
         defaultValue: false,
       },
-      // Include timestamps if not disabled in your model
+      organizationId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -46,7 +48,8 @@ module.exports = {
       },
     });
   },
+
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("Events");
+    await queryInterface.dropTable("events");
   },
 };

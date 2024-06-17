@@ -1,5 +1,5 @@
 require("dotenv").config();
-const Admin = require("../models/adminModel"); // Adjust the path as necessary
+const { Admin } = require("../models"); // Adjust the path as necessary
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -59,13 +59,29 @@ exports.authorizeRole = (expectedRole) => (req, res, next) => {
 };
 
 // Authentication middleware for Admin
+// exports.authMiddlewareAdmin = (req, res, next) => {
+//   const token = req.header("Authorization");
+//   if (!token) {
+//     return res.status(401).json({ msg: "No token, authorization denied" });
+//   }
+//   try {
+//     const decoded = jwt.verify(token, jwtSecret);
+//     req.admin = decoded.admin;
+//     next();
+//   } catch (err) {
+//     return res.status(401).json({ msg: "Token is not valid" });
+//   }
+// };
 exports.authMiddlewareAdmin = (req, res, next) => {
-  const token = req.header("Authorization");
+  const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
     return res.status(401).json({ msg: "No token, authorization denied" });
   }
   try {
     const decoded = jwt.verify(token, jwtSecret);
+    if (decoded.exp < Date.now() / 1000) {
+      return res.status(401).json({ msg: "Token has expired" });
+    }
     req.admin = decoded.admin;
     next();
   } catch (err) {

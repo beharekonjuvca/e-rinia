@@ -2,29 +2,51 @@ const express = require("express");
 const eventController = require("../controllers/eventController");
 const {
   authMiddlewareOrganization,
-  authorizeRole: authorizeRoleOrganization, // Rename for clarity
+  authorizeRole: authorizeRoleOrganization,
 } = require("../controllers/organizationController");
 
 const {
   authMiddlewareAdmin,
-  authorizeRole: authorizeRoleAdmin, // Rename for clarity
+  authorizeRole: authorizeRoleAdmin,
 } = require("../controllers/adminController");
 
 const router = express.Router();
+const multer = require("multer");
+const path = require("path");
 
-// Use authMiddlewareOrganization and authorizeRoleOrganization for organization-specific routes
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./uploads/events");
+  },
+  filename: function (req, file, cb) {
+    cb(
+      null,
+      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+    );
+  },
+});
+const upload = multer({ storage: storage });
+const fs = require("fs");
+const dir = "./uploads/events";
+
+if (!fs.existsSync(dir)) {
+  fs.mkdirSync(dir, { recursive: true });
+}
+
 router.post(
   "/",
   authMiddlewareOrganization,
   authorizeRoleOrganization("organization"),
   eventController.createEvent
 );
+
 router.put(
   "/:id",
   authMiddlewareOrganization,
   authorizeRoleOrganization("organization"),
   eventController.updateEvent
 );
+
 router.delete(
   "/:id",
   authMiddlewareOrganization,
@@ -32,7 +54,6 @@ router.delete(
   eventController.deleteEvent
 );
 
-// Use authMiddlewareAdmin and authorizeRoleAdmin for admin-specific routes
 router.put(
   "/:id/approve",
   authMiddlewareAdmin,
@@ -40,8 +61,18 @@ router.put(
   eventController.approveEvent
 );
 
-// Routes accessible to all users
 router.get("/", eventController.getAllEvents);
 router.get("/:id", eventController.getEvent);
+
+router.get(
+  "/organization/:orgId",
+  eventController.getEventsByOrganizationPublic
+);
+
+router.post(
+  "/upload/:id",
+  upload.single("picture"),
+  eventController.uploadEventPicture
+);
 
 module.exports = router;

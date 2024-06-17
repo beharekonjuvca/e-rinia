@@ -1,43 +1,55 @@
-'use strict';
+// models/index.js
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
-const db = {};
+const sequelize = require("../config/db");
+const { DataTypes } = require("sequelize");
 
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
+const initVolunteer = require("./volunteerModel");
+const initOrganization = require("./organizationModel");
+const initFavoriteOrganizations = require("./favoriteModel");
+const initAdmin = require("./adminModel");
+const initEvent = require("./eventModel");
+const initMember = require("./memberModel");
 
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    );
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
+const Volunteer = initVolunteer(sequelize, DataTypes);
+const Organization = initOrganization(sequelize, DataTypes);
+const FavoriteOrganizations = initFavoriteOrganizations(sequelize, DataTypes);
+const Admin = initAdmin(sequelize, DataTypes);
+const Event = initEvent(sequelize, DataTypes);
+const Member = initMember(sequelize, DataTypes);
+// After initializing all models...
+// Example association setup within models/index.js
 
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
+Volunteer.belongsToMany(Organization, {
+  through: FavoriteOrganizations,
+  foreignKey: "volunteerId",
+});
+Organization.belongsToMany(Volunteer, {
+  through: FavoriteOrganizations,
+  foreignKey: "organizationId",
+});
+
+// Additionally, if you want to be able to directly query FavoriteOrganizations
+// and include the Organization model, you need to explicitly define that relationship too.
+FavoriteOrganizations.belongsTo(Organization, { foreignKey: "organizationId" });
+Organization.hasMany(FavoriteOrganizations, { foreignKey: "organizationId" });
+
+// In your model associations file or wherever you set them up
+Organization.hasMany(Member, { as: "members" });
+Member.belongsTo(Organization);
+
+// Setup associations
+Object.values(sequelize.models).forEach((model) => {
+  if (model.associate) {
+    model.associate(sequelize.models);
   }
 });
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
-
-module.exports = db;
+module.exports = {
+  sequelize,
+  Volunteer,
+  Organization,
+  FavoriteOrganizations,
+  Admin,
+  Event,
+  Member,
+};

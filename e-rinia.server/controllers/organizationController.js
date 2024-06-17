@@ -1,5 +1,5 @@
 require("dotenv").config(); // This is usually done in your app's entry point file, not in each controller
-const Organization = require("../models/organizationModel");
+const { Organization } = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -16,7 +16,7 @@ exports.loginOrganization = async (req, res) => {
       return res.status(401).send("Email or password is incorrect.");
     }
 
-    const isMatch = await bcrypt.compare(password, organization.joinCode); // Ensure joinCode is hashed
+    const isMatch = await bcrypt.compare(password, organization.joinCode);
     if (!isMatch) {
       return res.status(401).send("Email or password is incorrect.");
     }
@@ -25,6 +25,7 @@ exports.loginOrganization = async (req, res) => {
       organization: {
         id: organization.id,
         role: "organization",
+        type: organization.type, // Include the type in the token
       },
     };
 
@@ -43,7 +44,8 @@ exports.loginOrganization = async (req, res) => {
 // const jwtSecret = process.env.JWT_SECRET;
 
 exports.authorizeRole = (expectedRole) => (req, res, next) => {
-  const token = req.header("Authorization");
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+  //const token = req.header("Authorization");
 
   if (!token) {
     return res.status(401).send("Access denied. No token provided.");
@@ -68,7 +70,8 @@ exports.authorizeRole = (expectedRole) => (req, res, next) => {
 };
 
 exports.authMiddlewareOrganization = (req, res, next) => {
-  const token = req.header("Authorization");
+  //const token = req.header("Authorization");
+  const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
     return res.status(401).json({ msg: "No token, authorization denied" });
   }
@@ -85,26 +88,34 @@ exports.authMiddlewareOrganization = (req, res, next) => {
 
 exports.createOrganization = async (req, res) => {
   try {
-    const { name, email, joinCode, picture, description } = req.body;
+    const { name, email, joinCode, picture, description, type } = req.body;
+
+    // Validate the type
+    if (type !== "NGO" && type !== "Institution") {
+      return res.status(400).send("Invalid organization type.");
+    }
 
     // Hash the joinCode before storing it
     const hashedJoinCode = await bcrypt.hash(joinCode, 10);
 
+    // Create the organization
     const organization = await Organization.create({
       name,
-      email: email.toLowerCase(), // It's good practice to store emails in lowercase
-      joinCode: hashedJoinCode, // Store the hashed joinCode, not the plain text
+      email: email.toLowerCase(),
+      joinCode: hashedJoinCode,
       picture,
       description,
+      type,
     });
 
-    // Do not send the hashed joinCode back in the response for security reasons
+    // Respond with the new organization data, but do not include sensitive info like joinCode
     return res.status(201).json({
       id: organization.id,
       name: organization.name,
       email: organization.email,
       picture: organization.picture,
       description: organization.description,
+      type, // Include the type in the response
     });
   } catch (error) {
     console.error(error);
@@ -173,5 +184,24 @@ exports.deleteOrganization = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).send("Server error");
+  }
+};
+exports.uploadPicture = async (req, res) => {
+  try {
+    const organization = await Organization.findByPk(req.params.id);
+    if (!organization) {
+      return res.status(404).send("Organization not found");
+    }
+
+    const file = req.file;
+    const imageUrl = `/uploads/${file.filename}`;
+
+    organization.picture = imageUrl;
+    await organization.save();
+
+    res.send({ message: "Profile picture uploaded successfully", imageUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
   }
 };

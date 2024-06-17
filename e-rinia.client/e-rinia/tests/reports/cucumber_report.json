@@ -1,0 +1,200 @@
+[
+  {
+    "description": "  Feature: Manage events",
+    "elements": [
+      {
+        "description": "",
+        "id": "event-management;create-a-new-event",
+        "keyword": "Scenario",
+        "line": 5,
+        "name": "Create a new event",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 6,
+            "name": "I am on the organization login page",
+            "match": {
+              "location": "tests\\step_definitions\\eventsSteps.js:14"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2642900499
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 7,
+            "name": "I log in as an organization",
+            "match": {
+              "location": "tests\\step_definitions\\eventsSteps.js:19"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 553311999
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "I am on the events page",
+            "match": {
+              "location": "tests\\step_definitions\\eventsSteps.js:32"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3550299
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 9,
+            "name": "I fill out the event form and submit",
+            "match": {
+              "location": "tests\\step_definitions\\eventsSteps.js:41"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 11216584399,
+              "error_message": "TimeoutError: Waiting for element to be located By(xpath, //div[contains(@class,'ant-picker-year-panel')]//td[contains(text(),'2024')])\nWait timed out after 10112ms\n    at C:\\Users\\PC\\Desktop\\e-rinia\\e-rinia.client\\e-rinia\\node_modules\\selenium-webdriver\\lib\\webdriver.js:911:22\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 10,
+            "name": "I should see the new event in the events list",
+            "match": {
+              "location": "tests\\step_definitions\\eventsSteps.js:114"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "event-management;edit-an-existing-event",
+        "keyword": "Scenario",
+        "line": 12,
+        "name": "Edit an existing event",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 13,
+            "name": "I am on the events page",
+            "match": {
+              "location": "tests\\step_definitions\\eventsSteps.js:32"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 306899,
+              "error_message": "TypeError: Cannot read properties of null (reading 'getCurrentUrl')\n    at CustomWorld.<anonymous> (C:\\Users\\PC\\Desktop\\e-rinia\\e-rinia.client\\e-rinia\\tests\\step_definitions\\eventsSteps.js:34:40)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 14,
+            "name": "an event exists",
+            "result": {
+              "status": "undefined",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 15,
+            "name": "I edit the event",
+            "result": {
+              "status": "undefined",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 16,
+            "name": "I should see the updated event details in the events list",
+            "result": {
+              "status": "undefined",
+              "duration": 0
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "event-management;delete-an-event",
+        "keyword": "Scenario",
+        "line": 18,
+        "name": "Delete an event",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 19,
+            "name": "I am on the events page",
+            "match": {
+              "location": "tests\\step_definitions\\eventsSteps.js:32"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 197400,
+              "error_message": "TypeError: Cannot read properties of null (reading 'getCurrentUrl')\n    at CustomWorld.<anonymous> (C:\\Users\\PC\\Desktop\\e-rinia\\e-rinia.client\\e-rinia\\tests\\step_definitions\\eventsSteps.js:34:40)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 20,
+            "name": "an event exists",
+            "result": {
+              "status": "undefined",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 21,
+            "name": "I delete the event",
+            "result": {
+              "status": "undefined",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 22,
+            "name": "I should not see the event in the events list",
+            "result": {
+              "status": "undefined",
+              "duration": 0
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "event-management",
+    "line": 1,
+    "keyword": "Feature",
+    "name": "Event management",
+    "tags": [],
+    "uri": "tests\\features\\events.feature"
+  }
+]
